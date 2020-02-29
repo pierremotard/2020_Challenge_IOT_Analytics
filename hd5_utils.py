@@ -32,7 +32,7 @@ def get_all_channel_data(ch_name, directory):
     return np.array(channel_data)
 
 
-def get_dict_3_categ(directory):
+def get_machine_dict(directory):
     categ = {}
     for filename in os.listdir(directory):
         f = h5py.File(os.path.join(directory, filename), 'r')
@@ -40,9 +40,11 @@ def get_dict_3_categ(directory):
         currLen = len(chanIDs.keys())
         if currLen == 152 or currLen == 120 or currLen == 238:
             try:
-                if categ[currLen] != None:
-                    categ[currLen].append(filename)
+                if categ['M' + str(currLen)] != None:
+                    categ['M' + str(currLen)].append(filename)
                 else:
-                    categ[currLen] = [filename]
+                    categ['M' + str(currLen)] = [filename]
             except KeyError:
-                categ[currLen] = [filename]
+                categ['M' + str(currLen)] = [filename]
+    
+    return categ
