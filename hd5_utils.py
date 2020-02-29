@@ -24,9 +24,9 @@ def get_channel_data(ch_name, filename, directory):
         print('Invalid Filename')
         return None
     
-def get_all_channel_data(ch_name, directory):
+def get_all_channel_data(ch_name, file_list, directory):
     channel_data = []
-    for filename in os.listdir(directory):
+    for filename in file_list:
         if filename.endswith(".hdf"):
             channel_data.extend(list(get_channel_data(ch_name, filename, directory)))
     return np.array(channel_data)
