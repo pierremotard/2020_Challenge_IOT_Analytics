@@ -3,17 +3,35 @@ import os
 import pandas as pd
 import numpy as np
 
+uniq_chn = set()
+directory = "competitionfiles"
+for filename in os.listdir(directory):
+    f = h5py.File(os.path.join(directory, filename), 'r')
+    for ch_name in f['DYNAMIC DATA']:
+        uniq_chn.add(ch_name)
+uniq_chn = list(uniq_chn)
+
 def hd5_to_df(filename, directory):
     if filename.endswith(".hdf"): 
         f = h5py.File(os.path.join(directory, filename), 'r')
         d = dict()
         for key, item in f['DYNAMIC DATA'].items():
             d[key] = np.array(item['MEASURED'])
-        df = pd.DataFrame(d)
-        return df
-    else:
-        print('Invalid Filename')
-        return None
+            df = pd.DataFrame(d)
+
+        first_ts = f['DYNAMIC DATA'].attrs['FIRST ACQ TIMESTAMP']
+        second_ts = f['DYNAMIC DATA'].attrs['LAST ACQ TIMESTAMP']
+        dts = pd.to_datetime(first_ts.decode("utf-8"))
+        dtf = pd.to_datetime(second_ts.decode("utf-8"))
+
+        ts = np.linspace(dts.value, dtf.value, len(f['DYNAMIC DATA']['ch_1']['MEASURED']))
+        ts_ind = pd.to_datetime(ts)
+        df = df.set_index(ts_ind)
+    
+    for name in uniq_chn:
+        if name not in df.columns:
+            df[name] = np.NaN
+    return df
 
 def get_channel_data(ch_name, filename, directory):
     if filename.endswith(".hdf"):
@@ -31,7 +49,6 @@ def get_all_channel_data(ch_name, file_list, directory):
             channel_data.extend(list(get_channel_data(ch_name, filename, directory)))
     return np.array(channel_data)
 
-
 def get_machine_dict(directory):
     categ = {}
     for filename in os.listdir(directory):
@@ -48,3 +65,4 @@ def get_machine_dict(directory):
                 categ['M' + str(currLen)] = [filename]
     
     return categ
+
