@@ -11,7 +11,7 @@ for filename in os.listdir(directory):
         uniq_chn.add(ch_name)
 uniq_chn = list(uniq_chn)
 
-def hd5_to_df(filename, directory):
+def hd5_to_df(filename, directory, resample=False):
     if filename.endswith(".hdf"): 
         f = h5py.File(os.path.join(directory, filename), 'r')
         d = dict()
@@ -31,8 +31,11 @@ def hd5_to_df(filename, directory):
     for name in uniq_chn:
         if name not in df.columns:
             df[name] = np.NaN
-    return df.resample('1s').mean()
 
+    if resample:
+        df = df.resample('10s').mean()
+    return df
+    
 def get_channel_data(ch_name, filename, directory):
     if filename.endswith(".hdf"):
         f = h5py.File(os.path.join(directory, filename), 'r')
@@ -65,4 +68,16 @@ def get_machine_dict(directory):
                 categ['M' + str(currLen)] = [filename]
     
     return categ
+
+def get_min_channel(ch_name, directory):
+    files = [filename for filename in os.listdir(directory)]
+    return [get_channel_data(ch_name, file, directory).min() for file in files]
+
+def get_max_channel(ch_name, directory):
+    files = [filename for filename in os.listdir(directory)]
+    return [get_channel_data(ch_name, file, directory).max() for file in files]
+
+def get_avg_channel(ch_name, directory):
+    files = [filename for filename in os.listdir(directory)]
+    return [get_channel_data(ch_name, file, directory).mean() for file in files]
 
