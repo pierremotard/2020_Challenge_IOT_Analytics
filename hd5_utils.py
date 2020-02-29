@@ -33,9 +33,9 @@ def hd5_to_df(filename, directory, resample=False):
             df[name] = np.NaN
 
     if resample:
-        df = df.resample('10s').mean()
+        df = df.resample('5s').mean()
     return df
-    
+
 def get_channel_data(ch_name, filename, directory):
     if filename.endswith(".hdf"):
         f = h5py.File(os.path.join(directory, filename), 'r')
