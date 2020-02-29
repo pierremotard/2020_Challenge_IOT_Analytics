@@ -24,4 +24,17 @@ def get_channel_data(ch_name, filename, directory):
         return None
     
 
-        
+def get_dict_3_categ(directory):
+    categ = {}
+    for filename in os.listdir(directory):
+        f = h5py.File(os.path.join(directory, filename), 'r')
+        chanIDs = f['DYNAMIC DATA']
+        currLen = len(chanIDs.keys())
+        if currLen == 152 or currLen == 120 or currLen == 238:
+            try:
+                if categ[currLen] != None:
+                    categ[currLen].append(filename)
+                else:
+                    categ[currLen] = [filename]
+            except KeyError:
+                categ[currLen] = [filename]
