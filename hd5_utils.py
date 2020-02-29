@@ -33,7 +33,7 @@ def hd5_to_df(filename, directory, resample=False):
             df[name] = np.NaN
 
     if resample:
-        df = df.resample('5s').mean()
+        df = df.resample('1s').mean()
     return df
 
 def get_channel_data(ch_name, filename, directory):
@@ -44,7 +44,25 @@ def get_channel_data(ch_name, filename, directory):
     else:
         print('Invalid Filename')
         return None
-    
+
+def get_channel_df(ch_name, filename, directory):
+    if filename.endswith(".hdf"):
+        f = h5py.File(os.path.join(directory, filename), 'r')
+        if ch_name not in f['DYNAMIC DATA']: return np.array([])
+        first_ts = f['DYNAMIC DATA'].attrs['FIRST ACQ TIMESTAMP']
+        second_ts = f['DYNAMIC DATA'].attrs['LAST ACQ TIMESTAMP']
+        dts = pd.to_datetime(first_ts.decode("utf-8"))
+        dtf = pd.to_datetime(second_ts.decode("utf-8"))
+
+        ts = np.linspace(dts.value, dtf.value, len(f['DYNAMIC DATA']['ch_1']['MEASURED']))
+        ts_ind = pd.to_datetime(ts)
+        df = pd.DataFrame({"ch_name": np.array(f['DYNAMIC DATA'][ch_name]['MEASURED'])}, index=ts_ind)
+        return df
+
+    else:
+        print('Invalid Filename')
+        return None
+
 def get_all_channel_data(ch_name, file_list, directory):
     channel_data = []
     for filename in file_list:
