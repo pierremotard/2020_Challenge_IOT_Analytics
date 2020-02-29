@@ -31,7 +31,7 @@ def hd5_to_df(filename, directory):
     for name in uniq_chn:
         if name not in df.columns:
             df[name] = np.NaN
-    return df
+    return df.resample('1s').mean()
 
 def get_channel_data(ch_name, filename, directory):
     if filename.endswith(".hdf"):
