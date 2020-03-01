@@ -120,6 +120,7 @@ def get_day_df(day, ch_name, directory):
     df = get_channel_df(ch_name, day_d[day_l][0], directory)
     if len(day_d[day_l]) == 1:
         df = df['ch_name']
+        df.to_numpy()
         return df[1:]
     
     for _file in day_d[day_l][1:]:
