@@ -2,6 +2,7 @@ import h5py
 import os
 import pandas as pd
 import numpy as np
+from scipy import signal
 
 cont_chs = ['ch_7', 'ch_180', 'ch_248', 'ch_124', 'ch_49', 'ch_110', 'ch_218', 
 'ch_102', 'ch_60', 'ch_361', 'ch_33', 'ch_291', 'ch_258', 'ch_295', 'ch_42', 
@@ -29,7 +30,7 @@ for file in os.listdir(directory):
     try:
         day_d[file.split('_')[1]].append(file)
     except KeyError:
-        day_d[file.split('_')[1]] = []
+        day_d[file.split('_')[1]] = [file]
 
 uniq_chn = set()
 for filename in os.listdir(directory):
@@ -117,10 +118,17 @@ def get_machine_dict(directory):
 def get_day_df(day, ch_name, directory):
     day_l = list(day_d.keys())[day]
     df = get_channel_df(ch_name, day_d[day_l][0], directory)
+    if len(day_d[day_l]) == 1:
+        df = df['ch_name']
+        return df[1:]
+    
     for _file in day_d[day_l][1:]:
         pdf = get_channel_df(ch_name, _file, directory)
         df = pd.concat([df, pdf], axis=0)
-    df.reset_index(inplace=True)
+    
+    pdf = df['ch_name']
+    df = df.rolling(10).mean()[::10]
+    print(np.nonzero(df))
     return df
 
 def get_min_channel(ch_name, directory):
@@ -134,3 +142,7 @@ def get_max_channel(ch_name, directory):
 def get_avg_channel(ch_name, directory):
     files = [filename for filename in os.listdir(directory)]
     return [get_channel_data(ch_name, file, directory).mean() for file in files]
+
+def get_day_number(day):
+    return list(day_d.keys()).index(day)
+
