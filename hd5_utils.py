@@ -3,6 +3,8 @@ import os
 import pandas as pd
 import numpy as np
 
+cont_chs = ['ch_7', 'ch_180', 'ch_248', 'ch_124', 'ch_49', 'ch_110', 'ch_218', 'ch_102', 'ch_60', 'ch_361', 'ch_33', 'ch_291', 'ch_258', 'ch_295', 'ch_42', 'ch_65', 'ch_50', 'ch_21', 'ch_177', 'ch_306', 'ch_179', 'ch_121', 'ch_26', 'ch_288', 'ch_74', 'ch_57', 'ch_114', 'ch_46', 'ch_129', 'ch_207', 'ch_285', 'ch_265', 'ch_256', 'ch_192', 'ch_185', 'ch_1', 'ch_135', 'ch_113', 'ch_61', 'ch_96', 'ch_117', 'ch_273', 'ch_318', 'ch_196', 'ch_4', 'ch_376', 'ch_35', 'ch_322', 'ch_79', 'ch_36', 'ch_99', 'ch_5', 'ch_25', 'ch_157', 'ch_305', 'ch_137', 'ch_130', 'ch_299', 'ch_98', 'ch_88', 'ch_127', 'ch_205', 'ch_52', 'ch_70', 'ch_187', 'ch_225', 'ch_167', 'ch_375', 'ch_307', 'ch_87', 'ch_66', 'ch_68', 'ch_44', 'ch_91', 'ch_348', 'ch_51', 'ch_80', 'ch_55', 'ch_266', 'ch_126', 'ch_90', 'ch_56', 'ch_47', 'ch_38', 'ch_297', 'ch_178', 'ch_27', 'ch_9', 'ch_138', 'ch_172', 'ch_48', 'ch_109', 'ch_37', 'ch_134', 'ch_106', 'ch_119', 'ch_13', 'ch_11', 'ch_72', 'ch_226', 'ch_257', 'ch_323', 'ch_63', 'ch_62', 'ch_125', 'ch_10', 'ch_14', 'ch_24', 'ch_59', 'ch_43', 'ch_294', 'ch_54', 'ch_188', 'ch_194', 'ch_64', 'ch_95', 'ch_111', 'ch_41', 'ch_161', 'ch_31', 'ch_58', 'ch_208', 'ch_206', 'ch_156', 'ch_339', 'ch_30', 'ch_53', 'ch_173', 'ch_255', 'ch_308', 'ch_39', 'ch_84', 'ch_40', 'ch_133', 'ch_341', 'ch_105', 'ch_67', 'ch_75', 'ch_32', 'ch_163', 'ch_69', 'ch_93', 'ch_283', 'ch_170', 'ch_274', 'ch_343', 'ch_316']
+
 uniq_chn = set()
 directory = "competitionfiles"
 for filename in os.listdir(directory):
@@ -12,7 +14,7 @@ for filename in os.listdir(directory):
 uniq_chn = list(uniq_chn)
 
 def hd5_to_df(filename, directory, resample=False):
-    if filename.endswith(".hdf"): 
+    if filename.endswith(".hdf"):
         f = h5py.File(os.path.join(directory, filename), 'r')
         d = dict()
         for key, item in f['DYNAMIC DATA'].items():
@@ -27,7 +29,7 @@ def hd5_to_df(filename, directory, resample=False):
         ts = np.linspace(dts.value, dtf.value, len(f['DYNAMIC DATA']['ch_1']['MEASURED']))
         ts_ind = pd.to_datetime(ts)
         df = df.set_index(ts_ind)
-    
+
     for name in uniq_chn:
         if name not in df.columns:
             df[name] = np.NaN
@@ -84,7 +86,7 @@ def get_machine_dict(directory):
                     categ['M' + str(currLen)] = [filename]
             except KeyError:
                 categ['M' + str(currLen)] = [filename]
-    
+
     return categ
 
 def get_min_channel(ch_name, directory):
@@ -98,4 +100,3 @@ def get_max_channel(ch_name, directory):
 def get_avg_channel(ch_name, directory):
     files = [filename for filename in os.listdir(directory)]
     return [get_channel_data(ch_name, file, directory).mean() for file in files]
-
