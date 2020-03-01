@@ -4,6 +4,8 @@ import pandas as pd
 import numpy as np
 from scipy import signal
 
+'''All channels that do not seem to be on or off switches
+'''
 cont_chs = ['ch_7', 'ch_180', 'ch_248', 'ch_124', 'ch_49', 'ch_110', 'ch_218', 
 'ch_102', 'ch_60', 'ch_361', 'ch_33', 'ch_291', 'ch_258', 'ch_295', 'ch_42', 
 'ch_65', 'ch_50', 'ch_21', 'ch_177', 'ch_306', 'ch_179', 'ch_121', 'ch_26', 
@@ -24,7 +26,9 @@ cont_chs = ['ch_7', 'ch_180', 'ch_248', 'ch_124', 'ch_49', 'ch_110', 'ch_218',
 'ch_105', 'ch_67', 'ch_75', 'ch_32', 'ch_163', 'ch_69', 'ch_93', 'ch_283', 
 'ch_170', 'ch_274', 'ch_343', 'ch_316']
 
-goodchannels = ['ch_1', 'ch_10', 'ch_100', 'ch_102', 'ch_105', 'ch_106', 'ch_109',
+''' Identified channels that have good correlation and varibale data
+'''
+goodchannels = `['ch_1', 'ch_10', 'ch_100', 'ch_102', 'ch_105', 'ch_106', 'ch_109',
        'ch_11', 'ch_110', 'ch_111', 'ch_13', 'ch_14', 'ch_177', 'ch_178',
        'ch_179', 'ch_198', 'ch_218', 'ch_226', 'ch_257', 'ch_258', 'ch_266',
        'ch_298', 'ch_305', 'ch_306', 'ch_307', 'ch_308', 'ch_31', 'ch_32',
@@ -34,8 +38,10 @@ goodchannels = ['ch_1', 'ch_10', 'ch_100', 'ch_102', 'ch_105', 'ch_106', 'ch_109
        'ch_60', 'ch_61', 'ch_62', 'ch_63', 'ch_64', 'ch_68', 'ch_7', 'ch_75',
        'ch_76', 'ch_77', 'ch_79', 'ch_80', 'ch_83', 'ch_84', 'ch_86', 'ch_87',
        'ch_88', 'ch_9', 'ch_90', 'ch_91', 'ch_93', 'ch_94', 'ch_95', 'ch_96',
-       'ch_98', 'ch_99']
+       'ch_98', 'ch_99']`
 
+''' Create dictionary of dates: files
+'''
 day_d = dict()
 directory = "competitionfiles"
 for file in os.listdir(directory):
@@ -44,6 +50,8 @@ for file in os.listdir(directory):
     except KeyError:
         day_d[file.split('_')[1]] = [file]
 
+''' Set of all the possible channel names
+'''
 uniq_chn = set()
 for filename in os.listdir(directory):
     f = h5py.File(os.path.join(directory, filename), 'r')
@@ -51,6 +59,9 @@ for filename in os.listdir(directory):
         uniq_chn.add(ch_name)
 uniq_chn = list(uniq_chn)
 
+'''
+Converts a file from hd5 to a dataframe and does resampling to reduce noise
+'''
 def hd5_to_df(filename, directory, resample=False):
     if filename.endswith(".hdf"):
         f = h5py.File(os.path.join(directory, filename), 'r')
@@ -76,6 +87,9 @@ def hd5_to_df(filename, directory, resample=False):
         df = df.resample('1s').mean()
     return df
 
+'''
+Gets raw numpy channel data from file
+'''
 def get_channel_data(ch_name, filename, directory):
     if filename.endswith(".hdf"):
         f = h5py.File(os.path.join(directory, filename), 'r')
@@ -84,7 +98,9 @@ def get_channel_data(ch_name, filename, directory):
     else:
         print('Invalid Filename')
         return None
-
+'''
+Returns a df of a specific channel from file filename.
+'''
 def get_channel_df(ch_name, filename, directory):
     if filename.endswith(".hdf"):
         f = h5py.File(os.path.join(directory, filename), 'r')
@@ -98,11 +114,13 @@ def get_channel_df(ch_name, filename, directory):
         ts_ind = pd.to_datetime(ts)
         df = pd.DataFrame({"ch_name": np.array(f['DYNAMIC DATA'][ch_name]['MEASURED'])}, index=ts_ind)
         return df
-
     else:
         print('Invalid Filename')
         return None
 
+'''
+Gets all the channel data in file_list for a particular channel
+'''
 def get_all_channel_data(ch_name, file_list, directory):
     channel_data = []
     for filename in file_list:
@@ -110,38 +128,35 @@ def get_all_channel_data(ch_name, file_list, directory):
             channel_data.extend(list(get_channel_data(ch_name, filename, directory)))
     return np.array(channel_data)
 
-def get_machine_dict(directory):
-    categ = {}
-    for filename in os.listdir(directory):
-        f = h5py.File(os.path.join(directory, filename), 'r')
-        chanIDs = f['DYNAMIC DATA']
-        currLen = len(chanIDs.keys())
-        if currLen == 152 or currLen == 120 or currLen == 238:
-            try:
-                if categ['M' + str(currLen)] != None:
-                    categ['M' + str(currLen)].append(filename)
-                else:
-                    categ['M' + str(currLen)] = [filename]
-            except KeyError:
-                categ['M' + str(currLen)] = [filename]
-
-    return categ
-
+'''
+Gets a dataframe for an entire day, use get_day_number as the parameter "day"
+'''
 def get_day_df(day, ch_name, directory):
     day_l = list(day_d.keys())[day]
     df = get_channel_df(ch_name, day_d[day_l][0], directory)
     if len(day_d[day_l]) == 1:
         df = df['ch_name']
-        df.to_numpy()
+        df = df.to_numpy()
         return df[1:]
     
     for _file in day_d[day_l][1:]:
         pdf = get_channel_df(ch_name, _file, directory)
         df = pd.concat([df, pdf], axis=0)
     
-    pdf = df['ch_name']
+    df = df['ch_name']
     df = df.rolling(10).mean()[::10]
-    print(np.nonzero(df))
+    df = df.to_numpy()
+    return df[1:]
+
+'''
+Cleans the dataframe signal
+'''
+def clean_df_signal(df):
+    pad_size = math.ceil(float(df.size)/R)*R - df.size
+    df = np.append(df, np.zeros(pad_size)*np.NaN)
+    df = np.nanmean(df.reshape(-1,R), axis=1)
+    df = moving_average(df)
+    df = df[df.nonzero()[0]]
     return df
 
 def get_min_channel(ch_name, directory):
@@ -156,6 +171,36 @@ def get_avg_channel(ch_name, directory):
     files = [filename for filename in os.listdir(directory)]
     return [get_channel_data(ch_name, file, directory).mean() for file in files]
 
+'''Get the day index of the day in YYYYMMDD format
+'''
 def get_day_number(day):
     return list(day_d.keys()).index(day)
+
+'''Detects if an anomaly occurred in the data
+'''
+def is_anomaly(channel, value, dir0):
+
+    dict_channels = {}
+    for chan in goodchannels:
+        df = pd.DataFrame()
+        for filename in os.listdir(dir0)[:50]:
+            
+            curr = utils.get_channel_df(chan, filename, dir0)
+            if curr.size > 3:
+                df = df.append(curr)
+
+        dict_channels[chan] = df
+
+    if channel not in goodchannels:
+        print("Not a predictable channel")
+        return
+    
+    out75 = dict_channels[channel]["ch_name"].describe()[6]
+    out25 = dict_channels[channel]["ch_name"].describe()[4]
+    
+    if value > out25 and value < out75:
+        return True
+    else:
+        return False
+
 
