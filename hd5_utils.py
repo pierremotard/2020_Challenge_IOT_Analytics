@@ -114,11 +114,11 @@ def get_machine_dict(directory):
 
     return categ
 
-def get_day_df(day, directory):
+def get_day_df(day, ch_name, directory):
     day_l = list(day_d.keys())[day]
-    df = get_channel_df('ch_53', day_d[day_l][0], directory)
+    df = get_channel_df(ch_name, day_d[day_l][0], directory)
     for _file in day_d[day_l][1:]:
-        pdf = get_channel_df('ch_53', _file, directory)
+        pdf = get_channel_df(ch_name, _file, directory)
         df = pd.concat([df, pdf], axis=0)
     df.reset_index(inplace=True)
     return df
